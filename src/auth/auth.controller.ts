@@ -1,16 +1,19 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpException, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { LoginUserDto } from '../user/dto/login-user.dto';
 import { LocalUserGuard } from '../guards/local-user.guard';
 import { RequestUser } from '../interfaces/requestUser.interface';
+import { JwtService } from '@nestjs/jwt';
 
 
 @Controller('auth')
 @ApiTags('Auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly authService: AuthService) {}
 
   // 회원가입 api
   @Post('signup')
@@ -22,6 +25,12 @@ export class AuthController {
   @Post('login')
   @UseGuards(LocalUserGuard)
   async loginUser(@Req() req: RequestUser) {
-    return req.user;
+    const user = req.user;
+    const token = await this.authService.getCookieByToken(user.id);
+    if(!token) throw new HttpException('Not Token', HttpStatus.BAD_REQUEST);
+    return {
+      user,
+      token,
+    }
   }
 }
