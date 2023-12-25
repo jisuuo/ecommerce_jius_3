@@ -7,7 +7,8 @@ import { ProductModule } from './product/product.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { EmailModule } from './email/email.module';
-import * as Joi from "@hapi/joi";
+import { RedisModule } from './redis/redis.module';
+import * as Joi from '@hapi/joi';
 
 @Module({
   imports: [
@@ -25,6 +26,10 @@ import * as Joi from "@hapi/joi";
         EMAIL_SERVICE: Joi.string().required(),
         EMAIL_USER: Joi.string().required(),
         EMAIL_PASSWORD: Joi.string().required(),
+
+        REDIS_HOST: Joi.string().required(),
+        REDIS_PORT: Joi.string().required(),
+        REDIS_TTL: Joi.string().required(),
       }),
     }),
     DatabaseModule,
@@ -32,6 +37,7 @@ import * as Joi from "@hapi/joi";
     UserModule,
     AuthModule,
     EmailModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService],

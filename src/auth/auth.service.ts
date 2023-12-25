@@ -1,13 +1,13 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { LoginUserDto } from '../user/dto/login-user.dto';
-import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { JwtUserInterface } from '../interfaces/jwtUser.interface';
 import { ConfigService } from '@nestjs/config';
-import { EmailModule } from '../email/email.module';
 import { EmailService } from '../email/email.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class AuthService {
@@ -16,6 +16,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
     private readonly emailService: EmailService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   // 회원가입 api
@@ -47,6 +48,7 @@ export class AuthService {
 
   async sendEmail(email: string) {
     const number = this.generate();
+    await this.cacheManager.set(email, number);
     await this.emailService.sendMail({
       to: email,
       subject: '이메일 인증',
@@ -61,5 +63,14 @@ export class AuthService {
       OTP += Math.floor(Math.random() * 10);
     }
     return OTP;
+  }
+
+  async checkEmail(email: string, code: string) {
+    const number = await this.cacheManager.get(email);
+    if (number !== code) {
+      throw new HttpException('Not Matched', HttpStatus.BAD_REQUEST);
+    }
+    await this.cacheManager.del(email);
+    return true;
   }
 }

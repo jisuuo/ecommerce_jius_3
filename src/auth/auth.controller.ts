@@ -11,11 +11,11 @@ import {
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { LoginUserDto } from '../user/dto/login-user.dto';
 import { LocalUserGuard } from '../guards/local-user.guard';
 import { RequestUser } from '../interfaces/requestUser.interface';
 import { JwtService } from '@nestjs/jwt';
 import { JwtUserGuard } from '../guards/jwt-user.guard';
+import { CheckEmailDto } from '../user/dto/check-email.dto';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -50,8 +50,16 @@ export class AuthController {
     return requestUser.user;
   }
 
-  @Post('email')
+  @Post('email/send')
   async sendEmail(@Body('email') email: string) {
     return await this.authService.sendEmail(email);
+  }
+
+  @Post('email/check')
+  async checkEmail(@Body() checkEmailDto: CheckEmailDto) {
+    return await this.authService.checkEmail(
+      checkEmailDto.email,
+      checkEmailDto.code,
+    );
   }
 }
